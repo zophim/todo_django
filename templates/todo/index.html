@@ -1,9 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
 <h1>Hello {{ username }}</h1>
 <div>
     {% if authenticated %}
     <ul>
         {% for todo in todos %}
-        <li><span>{{ todo.name }}</span><span><a href="#" data-url="{% url 'remove' %}">Remove</a></span></li>
+        <li>
+            <span>{{ todo.name }}</span>
+            <span><button class="remove" data-url="{% url 'remove' todo.id %}" data-method="delete" data-csrf="{{ csrf_token }}">Remove</button></span>
+        </li>
         {% endfor %}
     </ul>
     {% if error_message %}
@@ -17,3 +23,26 @@
     </form>
     {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    $('button.remove').on('click', function(event) {
+        event.preventDefault();
+        var tar = $(event.target);
+        var url = tar.data('url');
+        var csrftoken = getCookie('csrftoken');
+        if (confirm("Are you sure want to remove this item?")) {
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                },
+                success: function (data) {
+                    tar.parent().parent().fadeOut();
+                },
+            });
+        }
+    });
+</script>
+{% endblock %}
